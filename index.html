@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Alertas BPP | Loss Prevention MELI</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1E3A5F;--primary-l:#2B5288;--accent:#F5C518;--accent-d:#D4A800;
+  --ok:#00C853;--warn:#FF9800;--err:#EF5350;--info:#2196F3;
+  --bg:#EEF1F6;--card:#FFFFFF;--text:#1A1A2E;--muted:#6B7280;--border:#E5E7EB;
+  --mco:#E8632A;--mla:#0087C8;--mlb:#009B3A;--mlc:#C8001C;--mlm:#00896D;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.hdr{background:var(--primary);color:#fff;padding:14px 24px;display:flex;align-items:center;
+  justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,.25);position:sticky;top:0;z-index:100;}
+.hdr h1{font-size:17px;font-weight:800;letter-spacing:.2px;}
+.hdr .sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.demo-badge{background:var(--accent);color:var(--primary);font-size:9px;font-weight:800;
+  padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;
+  font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;}
+.btn-outline:hover{background:rgba(255,255,255,.1);}
+
+.main{padding:18px 22px;max-width:1600px;margin:0 auto;}
+
+/* FILTER BAR */
+.filter-bar{background:var(--card);border-radius:10px;padding:10px 16px;
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.filter-lbl{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.7px;white-space:nowrap;}
+.chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;
+  border:2px solid transparent;background:var(--bg);color:var(--text);
+  box-shadow:0 1px 3px rgba(0,0,0,.07);transition:all .15s;}
+.chip:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.12);}
+.chip.active{color:#fff;}
+.chip[data-site="ALL"].active{background:var(--primary);}
+.chip[data-site="MCO"].active{background:var(--mco);}
+.chip[data-site="MLA"].active{background:var(--mla);}
+.chip[data-site="MLB"].active{background:var(--mlb);}
+.chip[data-site="MLC"].active{background:var(--mlc);}
+.chip[data-site="MLM"].active{background:var(--mlm);}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border-radius:12px;padding:18px 20px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid transparent;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:80px;height:80px;border-radius:50%;opacity:.06;}
+.kpi.blue{border-left-color:var(--primary)}.kpi.blue::after{background:var(--primary);}
+.kpi.green{border-left-color:var(--ok)}.kpi.green::after{background:var(--ok);}
+.kpi.orange{border-left-color:var(--warn)}.kpi.orange::after{background:var(--warn);}
+.kpi.red{border-left-color:var(--err)}.kpi.red::after{background:var(--err);}
+.kpi.yellow{border-left-color:var(--accent-d)}.kpi.yellow::after{background:var(--accent-d);}
+.kpi-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.kpi-val{font-size:34px;font-weight:800;line-height:1;margin-bottom:5px;}
+.kpi.blue .kpi-val{color:var(--primary)}.kpi.green .kpi-val{color:#007E33;}
+.kpi.orange .kpi-val{color:#E65100}.kpi.red .kpi-val{color:#C62828;}
+.kpi.yellow .kpi-val{color:#7A5E00;}
+.kpi-sub{font-size:11px;color:var(--muted);line-height:1.5;}
+.kpi-bar{height:5px;background:var(--border);border-radius:3px;margin-top:10px;overflow:hidden;}
+.kpi-bar-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* LAYOUTS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.grid-2-3{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+@media(max-width:900px){.grid-2,.grid-2-3,.grid-3{grid-template-columns:1fr;}}
+.card{background:var(--card);border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.card-full{margin-bottom:18px;}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:700;line-height:1.3;}
+.card-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+.b-blue{background:rgba(30,58,95,.1);color:var(--primary);}
+.b-green{background:rgba(0,200,83,.1);color:#007E33;}
+.b-red{background:rgba(239,83,80,.12);color:#C62828;}
+.b-orange{background:rgba(255,152,0,.12);color:#E65100;}
+.b-gray{background:rgba(0,0,0,.06);color:var(--muted);}
+.sec-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.chart-wrap{position:relative;}.chart-wrap canvas{max-width:100%;}
+
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.donut-chart{width:160px;height:160px;flex-shrink:0;}
+.donut-legend{width:100%;}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-lbl{font-size:12px;color:var(--text);flex:1;}
+.legend-val{font-size:13px;font-weight:700;color:var(--text);}
+.legend-pct{font-size:10px;color:var(--muted);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.4px;padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);}
+.tbl th.r,.tbl td.r{text-align:right;}
+.tbl td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;font-weight:700;background:rgba(30,58,95,.04);}
+.tbl tr:hover td{background:rgba(0,0,0,.02);}
+.site-pill{display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;}
+.sp-MCO{background:var(--mco);}.sp-MLA{background:var(--mla);}
+.sp-MLB{background:var(--mlb);}.sp-MLC{background:var(--mlc);}.sp-MLM{background:var(--mlm);}
+.sp-TOT{background:var(--primary);}
+
+/* SEMÁFORO VENCIMIENTO */
+.semaforo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sem-card{border-radius:10px;padding:14px 12px;text-align:center;}
+.sem-card.vencida{background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);}
+.sem-card.urgente{background:rgba(255,152,0,.1);border:1px solid rgba(255,152,0,.3);}
+.sem-card.pronto{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);}
+.sem-card.ok{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);}
+.sem-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.sem-card.vencida .sem-lbl{color:#C62828;}
+.sem-card.urgente .sem-lbl{color:#E65100;}
+.sem-card.pronto  .sem-lbl{color:#7A5E00;}
+.sem-card.ok      .sem-lbl{color:#007E33;}
+.sem-val{font-size:30px;font-weight:800;line-height:1;}
+.sem-card.vencida .sem-val{color:#C62828;}
+.sem-card.urgente .sem-val{color:#E65100;}
+.sem-card.pronto  .sem-val{color:#7A5E00;}
+.sem-card.ok      .sem-val{color:#007E33;}
+.sem-sub{font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* MINI PROGRESS */
+.mini-prog{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
+.mini-prog span{display:block;height:100%;border-radius:2px;}
+
+/* BQ BAR */
+.bq-bar{background:linear-gradient(135deg,#162E4D,#1E3A5F);border-radius:10px;padding:12px 16px;
+  margin-bottom:18px;box-shadow:0 2px 10px rgba(30,58,95,.3);}
+.bq-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.bq-dot{width:9px;height:9px;border-radius:50%;background:#4B5563;flex-shrink:0;}
+.bq-dot.on{background:#00C853;box-shadow:0 0 8px #00C853aa;}
+.bq-label{font-size:12px;font-weight:800;color:rgba(255,255,255,.7);}
+.bq-sublabel{font-size:10px;color:rgba(255,255,255,.4);}
+.bq-sep{width:1px;height:28px;background:rgba(255,255,255,.12);}
+.bq-msg{font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;
+  background:rgba(0,200,83,.15);color:#69F0AE;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:#fff;border-radius:16px;padding:28px;width:92%;max-width:780px;
+  max-height:88vh;overflow-y:auto;transform:translateY(20px);transition:transform .2s;}
+.overlay.open .modal{transform:translateY(0);}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:6px;}
+.modal .desc{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.tab-list{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+.tab-btn{padding:7px 12px;font-size:11px;font-weight:600;border:none;background:transparent;
+  cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-pane{display:none;}.tab-pane.active{display:block;}
+.qbox{background:#1E1E2E;color:#CDD6F4;border-radius:8px;padding:12px 14px;
+  font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;
+  overflow-x:auto;white-space:pre;margin:8px 0 12px;}
+.copy-btn{background:var(--primary);color:#fff;border:none;border-radius:5px;
+  padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.copy-btn:hover{background:var(--primary-l);}
+.step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-body{font-size:12px;line-height:1.6;}
+.step-body strong{color:var(--primary);}
+.modal-foot{display:flex;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.btn-primary{background:var(--primary);color:#fff;padding:9px 20px;font-size:13px;border-radius:6px;
+  cursor:pointer;border:none;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <h1>Panel Alertas BPP | Loss Prevention</h1>
+    <div class="sub">BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR — Conversión de Alertas a Casos</div>
+  </div>
+  <div class="hdr-r">
+    <span class="demo-badge">Q1–Q4 + Q7–Q8 Real</span>
+    <button class="btn btn-outline" onclick="document.getElementById('modalQueries').classList.add('open')">
+      Ver Queries BQ
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- BQ STATUS BAR -->
+  <div class="bq-bar">
+    <div class="bq-row">
+      <div class="bq-dot on"></div>
+      <div>
+        <div class="bq-label">BigQuery — meli-bi-data.WHOWNER</div>
+        <div class="bq-sublabel">Tabla BPP + BT_LP_TRS_INVESTIGATIONS</div>
+      </div>
+      <div class="bq-sep"></div>
+      <div class="bq-msg">Datos demo — ejecutar queries BQ para cargar datos reales</div>
+    </div>
+  </div>
+
+  <!-- FILTER: PAÍS -->
+  <div class="filter-bar">
+    <span class="filter-lbl">País</span>
+    <button class="chip active" data-site="ALL" onclick="setFilter(this)">Todos</button>
+    <button class="chip" data-site="MCO" onclick="setFilter(this)">MCO</button>
+    <button class="chip" data-site="MLA" onclick="setFilter(this)">MLA</button>
+    <button class="chip" data-site="MLB" onclick="setFilter(this)">MLB</button>
+    <button class="chip" data-site="MLC" onclick="setFilter(this)">MLC</button>
+    <button class="chip" data-site="MLM" onclick="setFilter(this)">MLM</button>
+  </div>
+
+  <!-- KPI GRID -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi blue">
+      <div class="kpi-lbl">Total Alertas BPP</div>
+      <div class="kpi-val" id="kv-total">2.241</div>
+      <div class="kpi-sub">Envíos únicos alertados</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:var(--primary)"></div></div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Tasa de Conversión</div>
+      <div class="kpi-val" id="kv-conv">1.0%</div>
+      <div class="kpi-sub" id="kv-conv-sub">22 alertas con caso</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kv-conv-bar" style="width:1%;background:var(--err)"></div></div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Alertas Sin Caso</div>
+      <div class="kpi-val" id="kv-sincaso">2.219</div>
+      <div class="kpi-sub" id="kv-sincaso-sub">99.0% sin gestión</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kv-sincaso-bar" style="width:99%;background:var(--err)"></div></div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-lbl">Monto Sin Caso USD</div>
+      <div class="kpi-val" id="kv-monto">$1.07M</div>
+      <div class="kpi-sub" id="kv-monto-sub">99% del riesgo sin gestión</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:99%;background:var(--warn)"></div></div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-lbl">Reincidentes Sin Caso</div>
+      <div class="kpi-val" id="kv-tat">72</div>
+      <div class="kpi-sub">REPEAT_BEHAVIOR_FLAG = TRUE</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:60%;background:var(--accent-d)"></div></div>
+    </div>
+  </div>
+
+  <!-- ROW 1: CONVERSIÓN POR CAUSA + ESTADO CASOS -->
+  <div class="sec-title">Conversión de Alertas</div>
+  <div class="grid-2-3" style="margin-bottom:18px;">
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Conversión por Causa BPP</div>
+          <div class="card-sub">Alertas con caso vs sin caso por tipo</div>
+        </div>
+        <span class="badge b-blue">Q3</span>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chartCausa"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Tipo y Estado de Casos</div>
+          <div class="card-sub">Análisis de Caso vs Investigaciones</div>
+        </div>
+        <span class="badge b-blue">Q4</span>
+      </div>
+      <div class="donut-wrap">
+        <div class="donut-chart">
+          <canvas id="chartEstado"></canvas>
+        </div>
+        <div class="donut-legend" id="legendEstado"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: TENDENCIA + VENCIMIENTO -->
+  <div class="sec-title">Evolución y Prioridad Operativa</div>
+  <div class="grid-2" style="margin-bottom:18px;">
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Tendencia Mensual</div>
+          <div class="card-sub">Alertas emitidas vs casos generados</div>
+        </div>
+        <span class="badge b-blue">Q7</span>
+      </div>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="chartTendencia"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Vencimiento de Alertas Sin Caso</div>
+          <div class="card-sub">Alertas sin gestión por estado de plazo</div>
+        </div>
+        <span class="badge b-red">Q8</span>
+      </div>
+      <div class="semaforo-grid" id="semaforo">
+        <div class="sem-card vencida">
+          <div class="sem-lbl">Vencidas</div>
+          <div class="sem-val" id="sem-v">0</div>
+          <div class="sem-sub">CASE_EXP ≤ 0</div>
+        </div>
+        <div class="sem-card urgente">
+          <div class="sem-lbl">Vencen en 3d</div>
+          <div class="sem-val" id="sem-3">0</div>
+          <div class="sem-sub">1 – 3 días</div>
+        </div>
+        <div class="sem-card pronto">
+          <div class="sem-lbl">Vencen en 7d</div>
+          <div class="sem-val" id="sem-7">0</div>
+          <div class="sem-sub">4 – 7 días</div>
+        </div>
+        <div class="sem-card ok">
+          <div class="sem-lbl">Vigentes</div>
+          <div class="sem-val" id="sem-ok">0</div>
+          <div class="sem-sub">> 7 días</div>
+        </div>
+      </div>
+      <p style="font-size:10px;color:var(--muted);margin-top:14px;" id="semNota"></p>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: TABLA RESUMEN POR PAÍS -->
+  <div class="sec-title">Resumen por País</div>
+  <div class="card card-full" style="margin-bottom:18px;">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Cobertura de Conversión por País</div>
+        <div class="card-sub">Resultado de Q2 — ejecutar en BigQuery para datos reales</div>
+      </div>
+      <span class="badge b-blue">Q2</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl" id="tblPais">
+        <thead>
+          <tr>
+            <th>País</th>
+            <th class="r">Total Alertas</th>
+            <th class="r">Con Caso</th>
+            <th class="r">Sin Caso</th>
+            <th class="r">Tasa Conversión</th>
+            <th class="r">Monto Riesgo USD</th>
+            <th class="r">Monto Analizado USD</th>
+          </tr>
+        </thead>
+        <tbody id="tblPaisBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+
+<!-- MODAL QUERIES BQ -->
+<div class="overlay" id="modalQueries">
+  <div class="modal">
+    <h2>Queries BigQuery — Panel Alertas BPP</h2>
+    <p class="desc">Ejecutar cada query en BigQuery, descargar como JSON y reemplazar la sección DATA en el dashboard.</p>
+
+    <div class="tab-list">
+      <button class="tab-btn active" onclick="switchTab(this,'tQ1')">Q1 KPI General</button>
+      <button class="tab-btn" onclick="switchTab(this,'tQ2')">Q2 Por País</button>
+      <button class="tab-btn" onclick="switchTab(this,'tQ3')">Q3 Por Causa</button>
+      <button class="tab-btn" onclick="switchTab(this,'tQ4')">Q4 Tipos/Estado</button>
+      <button class="tab-btn" onclick="switchTab(this,'tQ7')">Q7 Tendencia</button>
+      <button class="tab-btn" onclick="switchTab(this,'tQ8')">Q8 Vencimiento</button>
+    </div>
+
+    <div class="tab-pane active" id="tQ1">
+      <button class="copy-btn" onclick="copyQ('q1')">Copiar</button>
+      <div class="qbox" id="q1">SELECT
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID)                                              AS total_alertas,
+  COUNT(DISTINCT inv.TRS_CASE_ID)                                                  AS alertas_con_caso,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID) - COUNT(DISTINCT inv.TRS_CASE_ID)           AS alertas_sin_caso,
+  ROUND(COUNT(DISTINCT inv.TRS_CASE_ID) * 100.0
+    / NULLIF(COUNT(DISTINCT bpp.SHP_SHIPMENT_ID), 0), 1)                          AS tasa_conversion_pct,
+  ROUND(SUM(bpp.BPP_CASHOUT_USD), 2)                                              AS monto_total_riesgo_usd,
+  ROUND(SUM(CASE WHEN inv.TRS_CASE_ID IS NULL
+    THEN bpp.BPP_CASHOUT_USD END), 2)                                             AS monto_sin_caso_usd,
+  COUNTIF(bpp.REPEAT_BEHAVIOR_FLAG = TRUE)                                        AS alertas_reincidentes,
+  ROUND(AVG(CASE WHEN inv.TRS_CASE_ID IS NOT NULL
+    THEN DATE_DIFF(inv.TRS_CASE_CREATED_DATE, DATE(bpp.AUD_INS_DTTM), DAY)
+    END), 1)                                                                      AS tat_promedio_dias
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR` bpp
+LEFT JOIN `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+  ON bpp.SHP_SHIPMENT_ID = inv.TRS_CASE_BPP_SHIPMENT_ID;</div>
+    </div>
+
+    <div class="tab-pane" id="tQ2">
+      <button class="copy-btn" onclick="copyQ('q2')">Copiar</button>
+      <div class="qbox" id="q2">SELECT
+  bpp.SIT_SITE_ID                                                                  AS site,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID)                                              AS total_alertas,
+  COUNT(DISTINCT inv.TRS_CASE_ID)                                                  AS con_caso,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID) - COUNT(DISTINCT inv.TRS_CASE_ID)           AS sin_caso,
+  ROUND(COUNT(DISTINCT inv.TRS_CASE_ID) * 100.0
+    / NULLIF(COUNT(DISTINCT bpp.SHP_SHIPMENT_ID), 0), 1)                         AS tasa_conversion_pct,
+  ROUND(SUM(bpp.BPP_CASHOUT_USD), 2)                                             AS monto_riesgo_usd,
+  ROUND(SUM(CASE WHEN inv.TRS_CASE_ID IS NOT NULL
+    THEN inv.TRS_ANALYZED_AMOUNT END), 2)                                        AS monto_analizado_usd
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR` bpp
+LEFT JOIN `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+  ON bpp.SHP_SHIPMENT_ID = inv.TRS_CASE_BPP_SHIPMENT_ID
+GROUP BY 1 ORDER BY total_alertas DESC;</div>
+    </div>
+
+    <div class="tab-pane" id="tQ3">
+      <button class="copy-btn" onclick="copyQ('q3')">Copiar</button>
+      <div class="qbox" id="q3">SELECT
+  COALESCE(bpp.CAUSA_BPP, 'Sin Causa')                                            AS causa_bpp,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID)                                             AS total_alertas,
+  COUNT(DISTINCT inv.TRS_CASE_ID)                                                 AS con_caso,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID) - COUNT(DISTINCT inv.TRS_CASE_ID)          AS sin_caso,
+  ROUND(COUNT(DISTINCT inv.TRS_CASE_ID) * 100.0
+    / NULLIF(COUNT(DISTINCT bpp.SHP_SHIPMENT_ID), 0), 1)                         AS tasa_conversion_pct,
+  ROUND(SUM(bpp.BPP_CASHOUT_USD), 2)                                             AS monto_riesgo_usd
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR` bpp
+LEFT JOIN `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+  ON bpp.SHP_SHIPMENT_ID = inv.TRS_CASE_BPP_SHIPMENT_ID
+GROUP BY 1 ORDER BY total_alertas DESC;</div>
+    </div>
+
+    <div class="tab-pane" id="tQ4">
+      <button class="copy-btn" onclick="copyQ('q4')">Copiar</button>
+      <div class="qbox" id="q4">SELECT
+  COALESCE(inv.TRS_ANALYSIS_TYPE, 'Sin Tipo')  AS tipo_analisis,
+  COALESCE(inv.TRS_CASE_STATUS,   'Sin Estado') AS estado_caso,
+  COUNT(DISTINCT inv.TRS_CASE_ID)               AS total_casos,
+  ROUND(SUM(inv.TRS_ANALYZED_AMOUNT), 2)        AS monto_analizado_usd
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+WHERE inv.TRS_CASE_BPP_SHIPMENT_ID IS NOT NULL
+  AND (inv.TRS_CASE_DELETE_FLAG IS FALSE OR inv.TRS_CASE_DELETE_FLAG IS NULL)
+GROUP BY 1, 2 ORDER BY total_casos DESC;</div>
+    </div>
+
+    <div class="tab-pane" id="tQ7">
+      <button class="copy-btn" onclick="copyQ('q7')">Copiar</button>
+      <div class="qbox" id="q7">SELECT
+  FORMAT_DATE('%Y-%m', bpp.DATEPARAMETER)       AS mes,
+  FORMAT_DATE('%b %Y', bpp.DATEPARAMETER)       AS mes_label,
+  bpp.SIT_SITE_ID                               AS site,
+  COUNT(DISTINCT bpp.SHP_SHIPMENT_ID)            AS total_alertas,
+  COUNT(DISTINCT inv.TRS_CASE_ID)                AS con_caso,
+  ROUND(COUNT(DISTINCT inv.TRS_CASE_ID) * 100.0
+    / NULLIF(COUNT(DISTINCT bpp.SHP_SHIPMENT_ID), 0), 1) AS tasa_conversion_pct,
+  ROUND(SUM(bpp.BPP_CASHOUT_USD), 2)            AS monto_usd
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR` bpp
+LEFT JOIN `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+  ON bpp.SHP_SHIPMENT_ID = inv.TRS_CASE_BPP_SHIPMENT_ID
+WHERE bpp.DATEPARAMETER >= DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH), MONTH)
+GROUP BY 1, 2, 3 ORDER BY 1, 3;</div>
+    </div>
+
+    <div class="tab-pane" id="tQ8">
+      <button class="copy-btn" onclick="copyQ('q8')">Copiar</button>
+      <div class="qbox" id="q8">SELECT
+  bpp.SIT_SITE_ID                                   AS site,
+  COUNTIF(bpp.CASE_BPP_EXPIRATION_DAY <= 0)         AS vencidas,
+  COUNTIF(bpp.CASE_BPP_EXPIRATION_DAY BETWEEN 1 AND 3) AS vence_3_dias,
+  COUNTIF(bpp.CASE_BPP_EXPIRATION_DAY BETWEEN 4 AND 7) AS vence_7_dias,
+  COUNTIF(bpp.CASE_BPP_EXPIRATION_DAY > 7)          AS vigentes,
+  ROUND(SUM(CASE WHEN bpp.CASE_BPP_EXPIRATION_DAY <= 0
+    THEN bpp.BPP_CASHOUT_USD END), 2)               AS monto_vencido_usd
+FROM `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS_SHIPMENTS_BPP_BEHAVIOR` bpp
+LEFT JOIN `meli-bi-data.WHOWNER.BT_LP_TRS_INVESTIGATIONS` inv
+  ON bpp.SHP_SHIPMENT_ID = inv.TRS_CASE_BPP_SHIPMENT_ID
+WHERE inv.TRS_CASE_ID IS NULL
+GROUP BY 1 ORDER BY vencidas DESC;</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-primary" onclick="document.getElementById('modalQueries').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+Chart.register(ChartDataLabels);
+
+// ─────────────────────────────────────────────
+// DEMO DATA (reemplazar con resultados de BQ)
+// ─────────────────────────────────────────────
+const DATA = {
+  updated_at: "27/04/2026 12:28",
+
+  // Q1
+  kpi_raw: [
+    {total_alertas:2448,con_caso:22,sin_caso:2426,tasa_conversion_pct:0.9,monto_total_riesgo_usd:1174350.59,monto_sin_caso_usd:1163890.83,alertas_reincidentes:93,tat_promedio_dias:-27.5}
+  ],
+
+  // Q2
+  por_pais: [
+    {site:"MLB",total_alertas:2079,con_caso:21,sin_caso:2058,tasa_conversion_pct:1.0,monto_riesgo_usd:912367.02,monto_analizado_usd:9418.69},
+    {site:"MLA",total_alertas:333,con_caso:0,sin_caso:333,tasa_conversion_pct:0.0,monto_riesgo_usd:241174.47,monto_analizado_usd:null},
+    {site:"MLC",total_alertas:21,con_caso:1,sin_caso:20,tasa_conversion_pct:4.8,monto_riesgo_usd:11203.83,monto_analizado_usd:1061.99},
+    {site:"MCO",total_alertas:15,con_caso:0,sin_caso:15,tasa_conversion_pct:0.0,monto_riesgo_usd:9605.27,monto_analizado_usd:null},
+    {site:"TOTAL",total_alertas:2448,con_caso:22,sin_caso:2426,monto_riesgo_usd:1174350.59,monto_analizado_usd:10480.68,tasa_conversion_pct:0.9}
+  ],
+
+  // Q3
+  por_causa: [
+    {causa_bpp:"Lost",total_alertas:2140,con_caso:17,sin_caso:2123,tasa_conversion_pct:0.8,monto_riesgo_usd:1011589.04},
+    {causa_bpp:"EnE - Extravios",total_alertas:174,con_caso:1,sin_caso:173,tasa_conversion_pct:0.6,monto_riesgo_usd:97815.14},
+    {causa_bpp:"Devolucion Fallida - No recibida",total_alertas:88,con_caso:4,sin_caso:84,tasa_conversion_pct:4.5,monto_riesgo_usd:45442.05},
+    {causa_bpp:"EnE - Extravios - USTX",total_alertas:38,con_caso:0,sin_caso:38,tasa_conversion_pct:0.0,monto_riesgo_usd:15424.63},
+    {causa_bpp:"Incompleto",total_alertas:4,con_caso:0,sin_caso:4,tasa_conversion_pct:0.0,monto_riesgo_usd:1960.89},
+    {causa_bpp:"EnE - Direccion Distinta",total_alertas:4,con_caso:0,sin_caso:4,tasa_conversion_pct:0.0,monto_riesgo_usd:2118.84}
+  ],
+
+  // Q4
+  por_estado: [
+    {tipo_analisis:"análisis de caso",estado_caso:"resuelto",total_casos:16,monto_analizado_usd:8011.75},
+    {tipo_analisis:"investigaciones",estado_caso:"resuelto",total_casos:5,monto_analizado_usd:1406.94},
+    {tipo_analisis:"análisis de caso",estado_caso:"en progreso",total_casos:1,monto_analizado_usd:1061.99}
+  ],
+
+  // Q7 agregado por mes
+  tendencia: [
+    {mes:"2026-02",mes_label:"Feb 2026",total_alertas:10,con_caso:10,monto_usd:3097.45,tasa_conversion_pct:100.0},
+    {mes:"2026-03",mes_label:"Mar 2026",total_alertas:1173,con_caso:10,monto_usd:542298.97,tasa_conversion_pct:0.9},
+    {mes:"2026-04",mes_label:"Apr 2026",total_alertas:1265,con_caso:2,monto_usd:628954.17,tasa_conversion_pct:0.2}
+  ],
+
+  // Q8
+  vencimiento: [
+    {site:"MCO",vencidas:0,vigentes:13,monto_vencido_usd:null,vence_3:0,vence_7:2},
+    {site:"MLC",vencidas:0,vigentes:18,monto_vencido_usd:null,vence_3:1,vence_7:1},
+    {site:"MLA",vencidas:0,vigentes:298,monto_vencido_usd:null,vence_3:15,vence_7:20},
+    {site:"MLB",vencidas:0,vigentes:1835,monto_vencido_usd:null,vence_3:110,vence_7:113}
+  ],
+
+  // KPIs planos para cards (de Q1)
+  kpi: {
+    total_alertas:    2448,
+    con_caso:         22,
+    sin_caso:         2426,
+    tasa_conv:        0.9,
+    monto_riesgo:     1174350.59,
+    monto_sin_caso:   1163890.83,
+    reincidentes:     93,
+    tat_dias:         -27.5
+  }
+};
+
+// ============================================================
+let activeSite = 'ALL';
+
+// ─────────────────────────────────────────────
+// FILTER
+// ─────────────────────────────────────────────
+function setFilter(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeSite = el.dataset.site;
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// RENDER KPIs
+// ─────────────────────────────────────────────
+function renderKPIs() {
+  const d = activeSite === 'ALL'
+    ? DATA.kpi
+    : (() => {
+        const row = DATA.por_pais.find(r => r.site === activeSite);
+        if (!row) return DATA.kpi;
+        return {
+          total_alertas: row.total,
+          con_caso:      row.con_caso,
+          sin_caso:      row.sin_caso,
+          tasa_conv:     row.tasa,
+          monto_riesgo:  row.monto_riesgo,
+          monto_sin_caso: row.monto_riesgo - row.monto_analizado,
+          tat_dias:      DATA.kpi.tat_dias,
+          reincidentes:  DATA.kpi.reincidentes
+        };
+      })();
+
+  document.getElementById('kv-total').textContent    = fmt(d.total_alertas);
+  document.getElementById('kv-conv').textContent     = d.tasa_conv.toFixed(1) + '%';
+  document.getElementById('kv-conv-sub').textContent = fmt(d.con_caso) + ' alertas con caso';
+  document.getElementById('kv-conv-bar').style.width = Math.max(d.tasa_conv, 1) + '%';
+  document.getElementById('kv-sincaso').textContent  = fmt(d.sin_caso);
+  document.getElementById('kv-sincaso-sub').textContent = (100 - d.tasa_conv).toFixed(1) + '% sin gestión';
+  document.getElementById('kv-sincaso-bar').style.width = (100 - d.tasa_conv) + '%';
+  document.getElementById('kv-monto').textContent    = fmtUSD(d.monto_sin_caso);
+  document.getElementById('kv-monto-sub').textContent = '99% del riesgo sin gestión';
+  document.getElementById('kv-tat').textContent      = fmt(d.reincidentes);
+}
+
+// ─────────────────────────────────────────────
+// CHART: CAUSA BPP (barras apiladas horizontales)
+// ─────────────────────────────────────────────
+let chartCausa = null;
+function renderCausa() {
+  const ctx = document.getElementById('chartCausa').getContext('2d');
+  const rows = DATA.por_causa;
+  const labels = rows.map(r => r.causa);
+  const conCaso = rows.map(r => r.con_caso);
+  const sinCaso = rows.map(r => r.total - r.con_caso);
+
+  if (chartCausa) chartCausa.destroy();
+  chartCausa = new Chart(ctx, {
+    type: 'bar',
+    plugins: [ChartDataLabels],
+    data: {
+      labels,
+      datasets: [
+        { label:'Con Caso', data:conCaso, backgroundColor:'rgba(0,200,83,.75)',  borderRadius:3 },
+        { label:'Sin Caso', data:sinCaso, backgroundColor:'rgba(239,83,80,.65)', borderRadius:3 }
+      ]
+    },
+    options: {
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{ size:11 }, boxWidth:12 } },
+        datalabels:{
+          color:'#fff', font:{ size:10, weight:'bold' },
+          formatter:(v) => v > 0 ? v : '',
+          anchor:'center', align:'center'
+        }
+      },
+      scales:{
+        x:{ stacked:true, ticks:{ font:{ size:10 } }, grid:{ display:false } },
+        y:{ stacked:true, ticks:{ font:{ size:10 } } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// CHART: ESTADO CASOS (donut)
+// ─────────────────────────────────────────────
+let chartEstado = null;
+const COLORES_ESTADO = ['#EF5350','#FF9800','#00C853','#2196F3','#9C27B0','#6B7280'];
+function renderEstado() {
+  const ctx = document.getElementById('chartEstado').getContext('2d');
+  const rows = DATA.por_estado;
+  const total = rows.reduce((s, r) => s + r.total, 0);
+
+  if (chartEstado) chartEstado.destroy();
+  chartEstado = new Chart(ctx, {
+    type:'doughnut',
+    plugins:[ChartDataLabels],
+    data:{
+      labels: rows.map(r => r.estado),
+      datasets:[{ data: rows.map(r => r.total), backgroundColor: COLORES_ESTADO, borderWidth:2 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, cutout:'65%',
+      plugins:{
+        legend:{ display:false },
+        datalabels:{ display:false }
+      }
+    }
+  });
+
+  const leg = document.getElementById('legendEstado');
+  leg.innerHTML = rows.map((r,i) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${COLORES_ESTADO[i]}"></div>
+      <span class="legend-lbl">${r.estado}</span>
+      <span class="legend-val">${r.total}</span>
+      <span class="legend-pct">&nbsp;${(r.total*100/total).toFixed(0)}%</span>
+    </div>
+    <div class="mini-prog"><span style="width:${(r.total*100/total).toFixed(0)}%;background:${COLORES_ESTADO[i]}"></span></div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// CHART: TENDENCIA MENSUAL (líneas)
+// ─────────────────────────────────────────────
+let chartTend = null;
+function renderTendencia() {
+  const ctx = document.getElementById('chartTendencia').getContext('2d');
+  const rows = DATA.tendencia;
+  if (chartTend) chartTend.destroy();
+  chartTend = new Chart(ctx, {
+    type:'line',
+    plugins:[ChartDataLabels],
+    data:{
+      labels: rows.map(r => r.mes),
+      datasets:[
+        {
+          label:'Alertas BPP', data: rows.map(r => r.alertas),
+          borderColor:'#EF5350', backgroundColor:'rgba(239,83,80,.08)',
+          tension:.35, pointRadius:4, fill:true
+        },
+        {
+          label:'Con Caso', data: rows.map(r => r.casos),
+          borderColor:'#00C853', backgroundColor:'rgba(0,200,83,.08)',
+          tension:.35, pointRadius:4, fill:true
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{ size:11 }, boxWidth:12 } },
+        datalabels:{ display:false }
+      },
+      scales:{
+        x:{ ticks:{ font:{ size:10 } }, grid:{ display:false } },
+        y:{ ticks:{ font:{ size:10 } } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// TABLA POR PAÍS
+// ─────────────────────────────────────────────
+function renderTablaPais() {
+  const rows = activeSite === 'ALL'
+    ? DATA.por_pais
+    : DATA.por_pais.filter(r => r.site === activeSite || r.site === 'TOTAL');
+
+  const body = document.getElementById('tblPaisBody');
+  body.innerHTML = rows.map(r => {
+    const isTotal = r.site === 'TOTAL';
+    const pill = isTotal
+      ? `<span class="site-pill sp-TOT">TOTAL</span>`
+      : `<span class="site-pill sp-${r.site}">${r.site}</span>`;
+    const conv = r.tasa >= 50 ? 'color:#007E33' : r.tasa >= 25 ? 'color:#E65100' : 'color:#C62828';
+    return `<tr>
+      <td>${pill}</td>
+      <td class="r">${fmt(r.total)}</td>
+      <td class="r">${fmt(r.con_caso)}</td>
+      <td class="r">${fmt(r.sin_caso)}</td>
+      <td class="r" style="${conv}"><strong>${r.tasa.toFixed(1)}%</strong></td>
+      <td class="r">$${fmt(r.monto_riesgo)}</td>
+      <td class="r">$${fmt(r.monto_analizado)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function fmt(n){return n==null?'—':Number(n).toLocaleString('es-CL');}
+function fmtUSD(n){
+  if(n==null) return '—';
+  if(n>=1e6) return '$'+( n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+n;
+}
+
+function renderAll(){
+  renderKPIs();
+  renderCausa();
+  renderEstado();
+  renderTendencia();
+  renderTablaPais();
+  renderSemaforo();
+}
+
+// TABS modal
+function switchTab(el, pane) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(pane).classList.add('active');
+}
+
+// Copy query
+function copyQ(id){
+  const txt = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar', 1500);
+  });
+}
+
+// Close modal on overlay click
+document.getElementById('modalQueries').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('open');
+});
+
+// ─────────────────────────────────────────────
+// SEMÁFORO VENCIMIENTO
+// ─────────────────────────────────────────────
+function renderSemaforo() {
+  const rows = activeSite === 'ALL'
+    ? DATA.vencimiento
+    : DATA.vencimiento.filter(r => r.site === activeSite);
+
+  const agg = rows.reduce((a, r) => ({
+    vencidas: a.vencidas + r.vencidas,
+    vence_3:  a.vence_3  + r.vence_3,
+    vence_7:  a.vence_7  + r.vence_7,
+    vigentes: a.vigentes + r.vigentes
+  }), { vencidas:0, vence_3:0, vence_7:0, vigentes:0 });
+
+  document.getElementById('sem-v').textContent  = fmt(agg.vencidas);
+  document.getElementById('sem-3').textContent  = fmt(agg.vence_3);
+  document.getElementById('sem-7').textContent  = fmt(agg.vence_7);
+  document.getElementById('sem-ok').textContent = fmt(agg.vigentes);
+
+  const nota = document.getElementById('semNota');
+  if (agg.vence_3 > 0) {
+    nota.style.color = '#C62828';
+    nota.style.fontWeight = '700';
+    nota.textContent = '⚠ ' + fmt(agg.vence_3) + ' alertas sin caso vencen en los próximos 3 días';
+  } else {
+    nota.style.color = '';
+    nota.style.fontWeight = '';
+    nota.textContent = 'Sin alertas próximas a vencer';
+  }
+}
+
+// INIT
+renderAll();
+</script>
+</body>
+</html>
