@@ -1,0 +1,274 @@
+{
+  "kpi": [
+    {
+      "total_alertas": 2448,
+      "con_caso": 22,
+      "sin_caso": 2426,
+      "tasa_conversion_pct": 0.9,
+      "monto_total_riesgo_usd": 1174350.59,
+      "monto_sin_caso_usd": 1163890.83,
+      "alertas_reincidentes": 93,
+      "tat_promedio_dias": -27.5
+    }
+  ],
+  "por_pais": [
+    {
+      "site": "MLB",
+      "total_alertas": 2079,
+      "con_caso": 21,
+      "sin_caso": 2058,
+      "tasa_conversion_pct": 1.0,
+      "monto_riesgo_usd": 912367.02,
+      "monto_analizado_usd": 9418.69
+    },
+    {
+      "site": "MLA",
+      "total_alertas": 333,
+      "con_caso": 0,
+      "sin_caso": 333,
+      "tasa_conversion_pct": 0.0,
+      "monto_riesgo_usd": 241174.47,
+      "monto_analizado_usd": null
+    },
+    {
+      "site": "MLC",
+      "total_alertas": 21,
+      "con_caso": 1,
+      "sin_caso": 20,
+      "tasa_conversion_pct": 4.8,
+      "monto_riesgo_usd": 11203.83,
+      "monto_analizado_usd": 1061.99
+    },
+    {
+      "site": "MCO",
+      "total_alertas": 15,
+      "con_caso": 0,
+      "sin_caso": 15,
+      "tasa_conversion_pct": 0.0,
+      "monto_riesgo_usd": 9605.27,
+      "monto_analizado_usd": null
+    },
+    {
+      "site": "TOTAL",
+      "total_alertas": 2448,
+      "con_caso": 22,
+      "sin_caso": 2426,
+      "monto_riesgo_usd": 1174350.59,
+      "monto_analizado_usd": 10480.68,
+      "tasa_conversion_pct": 0.9
+    }
+  ],
+  "por_causa": [
+    {
+      "causa_bpp": "Lost",
+      "total_alertas": 2140,
+      "con_caso": 17,
+      "sin_caso": 2123,
+      "tasa_conversion_pct": 0.8,
+      "monto_riesgo_usd": 1011589.04
+    },
+    {
+      "causa_bpp": "EnE - Extravios",
+      "total_alertas": 174,
+      "con_caso": 1,
+      "sin_caso": 173,
+      "tasa_conversion_pct": 0.6,
+      "monto_riesgo_usd": 97815.14
+    },
+    {
+      "causa_bpp": "Devolucion Fallida - No recibida",
+      "total_alertas": 88,
+      "con_caso": 4,
+      "sin_caso": 84,
+      "tasa_conversion_pct": 4.5,
+      "monto_riesgo_usd": 45442.05
+    },
+    {
+      "causa_bpp": "EnE - Extravios - USTX",
+      "total_alertas": 38,
+      "con_caso": 0,
+      "sin_caso": 38,
+      "tasa_conversion_pct": 0.0,
+      "monto_riesgo_usd": 15424.63
+    },
+    {
+      "causa_bpp": "Incompleto",
+      "total_alertas": 4,
+      "con_caso": 0,
+      "sin_caso": 4,
+      "tasa_conversion_pct": 0.0,
+      "monto_riesgo_usd": 1960.89
+    },
+    {
+      "causa_bpp": "EnE - Direccion Distinta",
+      "total_alertas": 4,
+      "con_caso": 0,
+      "sin_caso": 4,
+      "tasa_conversion_pct": 0.0,
+      "monto_riesgo_usd": 2118.84
+    }
+  ],
+  "por_estado": [
+    {
+      "tipo_analisis": "análisis de caso",
+      "estado_caso": "resuelto",
+      "total_casos": 16,
+      "monto_analizado_usd": 8011.75
+    },
+    {
+      "tipo_analisis": "investigaciones",
+      "estado_caso": "resuelto",
+      "total_casos": 5,
+      "monto_analizado_usd": 1406.94
+    },
+    {
+      "tipo_analisis": "análisis de caso",
+      "estado_caso": "en progreso",
+      "total_casos": 1,
+      "monto_analizado_usd": 1061.99
+    }
+  ],
+  "tendencia": [
+    {
+      "mes": "2026-02",
+      "mes_label": "Feb 2026",
+      "site": "MLB",
+      "total_alertas": 10,
+      "con_caso": 10,
+      "tasa_conversion_pct": 100.0,
+      "monto_usd": 3097.45
+    },
+    {
+      "mes": "2026-03",
+      "mes_label": "Mar 2026",
+      "site": "MCO",
+      "total_alertas": 7,
+      "con_caso": 0,
+      "tasa_conversion_pct": 0.0,
+      "monto_usd": 4170.43
+    },
+    {
+      "mes": "2026-03",
+      "mes_label": "Mar 2026",
+      "site": "MLA",
+      "total_alertas": 176,
+      "con_caso": 0,
+      "tasa_conversion_pct": 0.0,
+      "monto_usd": 134620.36
+    },
+    {
+      "mes": "2026-03",
+      "mes_label": "Mar 2026",
+      "site": "MLB",
+      "total_alertas": 983,
+      "con_caso": 10,
+      "tasa_conversion_pct": 1.0,
+      "monto_usd": 399372.75
+    },
+    {
+      "mes": "2026-03",
+      "mes_label": "Mar 2026",
+      "site": "MLC",
+      "total_alertas": 7,
+      "con_caso": 0,
+      "tasa_conversion_pct": 0.0,
+      "monto_usd": 4135.43
+    },
+    {
+      "mes": "2026-04",
+      "mes_label": "Apr 2026",
+      "site": "MCO",
+      "total_alertas": 8,
+      "con_caso": 0,
+      "tasa_conversion_pct": 0.0,
+      "monto_usd": 5434.84
+    },
+    {
+      "mes": "2026-04",
+      "mes_label": "Apr 2026",
+      "site": "MLA",
+      "total_alertas": 157,
+      "con_caso": 0,
+      "tasa_conversion_pct": 0.0,
+      "monto_usd": 106554.11
+    },
+    {
+      "mes": "2026-04",
+      "mes_label": "Apr 2026",
+      "site": "MLB",
+      "total_alertas": 1086,
+      "con_caso": 1,
+      "tasa_conversion_pct": 0.1,
+      "monto_usd": 509896.82
+    },
+    {
+      "mes": "2026-04",
+      "mes_label": "Apr 2026",
+      "site": "MLC",
+      "total_alertas": 14,
+      "con_caso": 1,
+      "tasa_conversion_pct": 7.1,
+      "monto_usd": 7068.4
+    }
+  ],
+  "vencimiento": [
+    {
+      "site": "MCO",
+      "vencidas": 0,
+      "vigentes": 13,
+      "monto_vencido_usd": null,
+      "vence_3": 0,
+      "vence_7": 2
+    },
+    {
+      "site": "MLC",
+      "vencidas": 0,
+      "vigentes": 18,
+      "monto_vencido_usd": null,
+      "vence_3": 1,
+      "vence_7": 1
+    },
+    {
+      "site": "MLA",
+      "vencidas": 0,
+      "vigentes": 298,
+      "monto_vencido_usd": null,
+      "vence_3": 15,
+      "vence_7": 20
+    },
+    {
+      "site": "MLB",
+      "vencidas": 0,
+      "vigentes": 1835,
+      "monto_vencido_usd": null,
+      "vence_3": 110,
+      "vence_7": 113
+    }
+  ],
+  "tendencia_agg": [
+    {
+      "mes": "2026-02",
+      "mes_label": "Feb 2026",
+      "total_alertas": 10,
+      "con_caso": 10,
+      "monto_usd": 3097.45,
+      "tasa_conversion_pct": 100.0
+    },
+    {
+      "mes": "2026-03",
+      "mes_label": "Mar 2026",
+      "total_alertas": 1173,
+      "con_caso": 10,
+      "monto_usd": 542298.97,
+      "tasa_conversion_pct": 0.9
+    },
+    {
+      "mes": "2026-04",
+      "mes_label": "Apr 2026",
+      "total_alertas": 1265,
+      "con_caso": 2,
+      "monto_usd": 628954.17,
+      "tasa_conversion_pct": 0.2
+    }
+  ]
+}
